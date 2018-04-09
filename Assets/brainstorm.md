@@ -1,0 +1,9 @@
+- Steganography
+    - https://en.wikipedia.org/wiki/Steganography
+    - https://github.com/CheapDevotion/Steganography
+- Post on twitter:
+    - https://github.com/toofusan/Twity
+    - https://developer.twitter.com/en/docs/ads/general/guides/getting-started
+- Deflate:
+    - https://gist.github.com/kebby/7194616
+    - https://archive.codeplex.com/?p=dotnetzip
