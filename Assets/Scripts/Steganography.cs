@@ -158,9 +158,17 @@ public class Steganography
         return new string(System.Text.Encoding.UTF8.GetChars(Decode(src)));
     }
 
-    private static byte[] DecodeA2(Color32[] src, int srcIndex, byte[] dst)
+    private static int DecodeA2(Color32[] src, int srcIndex, byte[] dst)
     {
-        return null;
+        for (var dstIndex = 0; dstIndex < dst.Length; dstIndex++)
+        {
+            dst[dstIndex] |= (byte)(src[srcIndex++].a & 0x03);
+            dst[dstIndex] |= (byte)((src[srcIndex++].a & 0x03) << 2);
+            dst[dstIndex] |= (byte)((src[srcIndex++].a & 0x03) << 4);
+            dst[dstIndex] |= (byte)((src[srcIndex++].a & 0x03) << 6);
+        }
+
+        return srcIndex;
     }
 
     private static byte[] DecodeRGB1(Color32[] src, int srcIndex, byte[] dst)
@@ -250,9 +258,19 @@ public class Steganography
         return dstIndex;
     }
 
-    private static void EncodeA2(byte[] src, Color32[] dst, int dstByteOffset)
+    private static void EncodeA2(byte[] src, Color32[] dst, int dstIndex)
     {
-        throw new NotImplementedException();
+        foreach (var b in src)
+        {
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfc) | (b & 0x03));
+            ++dstIndex;
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfc) | ((b & 0x0C) >> 0x02));
+            ++dstIndex;
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfc) | ((b & 0x30) >> 0x04));
+            ++dstIndex;
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfc) | ((b & 0xc0) >> 0x06));
+            ++dstIndex;
+        }
     }
 
     private static void EncodeRGB1(byte[] src, Color32[] dst, int dstByteOffset)
