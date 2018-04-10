@@ -22,7 +22,7 @@ public class SteganographyTests {
 
         var msg = "this is a test";
         var encodedTex = Steganography.Encode(tex, msg, format);
-        ValidateEncoding(tex, encodedTex, mask);
+        ValidateEncoding(tex, encodedTex, format);
 
         var result = Steganography.DecodeAsString(encodedTex);
 
@@ -41,14 +41,14 @@ public class SteganographyTests {
             data[i] = i;
         }
         var encodedTex = Steganography.Encode(tex, data, format);
-        ValidateEncoding(tex, encodedTex, mask);
+        ValidateEncoding(tex, encodedTex, format);
 
         var result = Steganography.Decode(encodedTex);
 
         Assert.AreEqual(data, result);
     }
 
-    void ValidateEncoding(Texture2D src, Texture2D encoded, int mask)
+    void ValidateEncoding(Texture2D src, Texture2D encoded, Steganography.Format format)
     {
         Assert.AreEqual(src.width, encoded.width);
         Assert.AreEqual(src.height, encoded.height);
@@ -56,14 +56,52 @@ public class SteganographyTests {
         var srcPixels = src.GetPixels32();
         var encodedPixels = encoded.GetPixels32();
 
-        for (int i = 0; i < srcPixels.Length; i++)
+        for (int i = Steganography.kHeaderNbPixels; i < srcPixels.Length; i++)
         {
             var srcPixel = srcPixels[i];
             var encodedPixel = encodedPixels[i];
-            Assert.AreEqual(srcPixel.r & mask, encodedPixel.r & mask);
-            Assert.AreEqual(srcPixel.g & mask, encodedPixel.g & mask);
-            Assert.AreEqual(srcPixel.b & mask, encodedPixel.b & mask);
-            Assert.AreEqual(srcPixel.a & mask, encodedPixel.a & mask);
+
+            switch (format)
+            {
+                case Steganography.Format.A1:
+                    Assert.AreEqual(srcPixel.r, encodedPixel.r);
+                    Assert.AreEqual(srcPixel.g, encodedPixel.g);
+                    Assert.AreEqual(srcPixel.b, encodedPixel.b);
+                    Assert.AreEqual(srcPixel.a & k1BitMask, encodedPixel.a & k1BitMask);
+                    break;
+                case Steganography.Format.A2:
+                    Assert.AreEqual(srcPixel.r, encodedPixel.r);
+                    Assert.AreEqual(srcPixel.g, encodedPixel.g);
+                    Assert.AreEqual(srcPixel.b, encodedPixel.b);
+                    Assert.AreEqual(srcPixel.a & k2BitMask, encodedPixel.a & k2BitMask);
+                    break;
+                case Steganography.Format.RGB1:
+                    Assert.AreEqual(srcPixel.r & k1BitMask, encodedPixel.r & k1BitMask);
+                    Assert.AreEqual(srcPixel.g & k1BitMask, encodedPixel.g & k1BitMask);
+                    Assert.AreEqual(srcPixel.b & k1BitMask, encodedPixel.b & k1BitMask);
+                    Assert.AreEqual(srcPixel.a, encodedPixel.a);
+                    break;
+                case Steganography.Format.RGB2:
+                    Assert.AreEqual(srcPixel.r & k2BitMask, encodedPixel.r & k2BitMask);
+                    Assert.AreEqual(srcPixel.g & k2BitMask, encodedPixel.g & k2BitMask);
+                    Assert.AreEqual(srcPixel.b & k2BitMask, encodedPixel.b & k2BitMask);
+                    Assert.AreEqual(srcPixel.a, encodedPixel.a);
+                    break;
+                case Steganography.Format.RGBA1:
+                    Assert.AreEqual(srcPixel.r & k1BitMask, encodedPixel.r & k1BitMask);
+                    Assert.AreEqual(srcPixel.g & k1BitMask, encodedPixel.g & k1BitMask);
+                    Assert.AreEqual(srcPixel.b & k1BitMask, encodedPixel.b & k1BitMask);
+                    Assert.AreEqual(srcPixel.a & k1BitMask, encodedPixel.a & k1BitMask);
+                    break;
+                case Steganography.Format.RGBA2:
+                    Assert.AreEqual(srcPixel.r & k2BitMask, encodedPixel.r & k2BitMask);
+                    Assert.AreEqual(srcPixel.g & k2BitMask, encodedPixel.g & k2BitMask);
+                    Assert.AreEqual(srcPixel.b & k2BitMask, encodedPixel.b & k2BitMask);
+                    Assert.AreEqual(srcPixel.a & k2BitMask, encodedPixel.a & k2BitMask);
+                    break;
+            }
+
+            
         }
     }
 
@@ -135,13 +173,39 @@ public class SteganographyTests {
     [Test]
     public void A1_BlackImgStenoData()
     {
-        StenoData(Steganography.Format.A1, kBlack, k1BitMask, 300);
+        StenoData(Steganography.Format.A1, kBlack, k1BitMask, 46);
     }
 
     [Test]
     public void A1_WhiteImgStenoData()
     {
-        StenoData(Steganography.Format.A1, kWhite, k1BitMask, 300);
+        StenoData(Steganography.Format.A1, kWhite, k1BitMask, 46);
+    }
+    #endregion
+
+    #region A2
+    [Test]
+    public void A2_BlackImgStenoString()
+    {
+        StenoString(Steganography.Format.A2, kBlack, k2BitMask, 25);
+    }
+
+    [Test]
+    public void A2_WhiteImgStenoString()
+    {
+        StenoString(Steganography.Format.A2, kWhite, k2BitMask, 25);
+    }
+
+    [Test]
+    public void A2_BlackImgStenoData()
+    {
+        StenoData(Steganography.Format.A2, kBlack, k2BitMask, 300);
+    }
+
+    [Test]
+    public void A2_WhiteImgStenoData()
+    {
+        StenoData(Steganography.Format.A2, kWhite, k2BitMask, 300);
     }
     #endregion
 
@@ -158,11 +222,11 @@ public class SteganographyTests {
     {
         var tex = new Texture2D(4, 4);
         Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.A1), 1);
-        Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.A2), 3);
-        Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.RGB1), 5);
-        Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.RGB2), 10);
-        Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.RGBA1), 7);
-        Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.RGBA2), 14);
+        Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.A2), 2);
+        Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.RGB1), 3);
+        Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.RGB2), 6);
+        Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.RGBA1), 4);
+        Assert.AreEqual(Steganography.TextureMaxDataSize(tex, Steganography.Format.RGBA2), 8);
 
         var tex2 = new Texture2D(1, 1);
         Assert.AreEqual(Steganography.TextureMaxDataSize(tex2, Steganography.Format.RGBA2), 0);

@@ -16,10 +16,9 @@ public class Steganography
         A2
     }
 
-    private static byte[] kHeader = System.Text.Encoding.ASCII.GetBytes("#ST");
-    private const int kHeaderSize = 8;
-    private const int kHeaderNbPixels = 2;
-
+    public static byte[] kHeader = System.Text.Encoding.ASCII.GetBytes("#ST");
+    public const int kHeaderSize = 8;
+    public const int kHeaderNbPixels = 8;
 
     public static Texture2D Encode(Texture2D src, string msg, Format format = Format.RGBA2)
     {
@@ -44,28 +43,30 @@ public class Steganography
         var srcSize = System.BitConverter.GetBytes(bytes.Length);
         srcSize.CopyTo(header, 4);
 
-        var pixelIndex = EncodeRGBA1(header, pixels, 0);
+        EncodeRGBA2(header, pixels, 0);
         switch (format)
         {
             case Format.A1:
-                EncodeA1(bytes, pixels, pixelIndex);
+                EncodeA1(bytes, pixels, kHeaderNbPixels);
                 break;
             case Format.A2:
-                EncodeA2(bytes, pixels, pixelIndex);
+                EncodeA2(bytes, pixels, kHeaderNbPixels);
                 break;
             case Format.RGB1:
-                EncodeRGB1(bytes, pixels, pixelIndex);
+                EncodeRGB1(bytes, pixels, kHeaderNbPixels);
                 break;
             case Format.RGB2:
-                EncodeRGB2(bytes, pixels, pixelIndex);
+                EncodeRGB2(bytes, pixels, kHeaderNbPixels);
                 break;
             case Format.RGBA1:
-                EncodeRGBA1(bytes, pixels, pixelIndex);
+                EncodeRGBA1(bytes, pixels, kHeaderNbPixels);
                 break;
             case Format.RGBA2:
-                EncodeRGBA2(bytes, pixels, pixelIndex);
+                EncodeRGBA2(bytes, pixels, kHeaderNbPixels);
                 break;
         }
+
+        var pixels2 = src.GetPixels32();
 
         copy.SetPixels32(pixels);
 
@@ -74,29 +75,29 @@ public class Steganography
 
     public static int TextureMaxDataSize(Texture2D src, Format format = Format.RGBA2)
     {
-        var nbPixels = (src.width * src.height) - kHeaderNbPixels;
-        if (nbPixels <= 0)
+        var nbDataPixels = (src.width * src.height) - kHeaderNbPixels;
+        if (nbDataPixels <= 0)
             return 0;
         var bitCapacity = 0;
         switch (format)
         {
             case Format.A1:
-                bitCapacity = nbPixels;
+                bitCapacity = nbDataPixels;
                 break;
             case Format.A2:
-                bitCapacity = nbPixels * 2;
+                bitCapacity = nbDataPixels * 2;
                 break;
             case Format.RGB1:
-                bitCapacity = nbPixels * 3;
+                bitCapacity = nbDataPixels * 3;
                 break;
             case Format.RGB2:
-                bitCapacity = nbPixels * 6;
+                bitCapacity = nbDataPixels * 6;
                 break;
             case Format.RGBA1:
-                bitCapacity = nbPixels * 4;
+                bitCapacity = nbDataPixels * 4;
                 break;
             case Format.RGBA2:
-                bitCapacity = nbPixels * 8;
+                bitCapacity = nbDataPixels * 8;
                 break;
         }
 
@@ -112,7 +113,7 @@ public class Steganography
         }
 
         var header = new byte[kHeaderSize];
-        var srcIndex = DecodeRGBA1(pixels, 0, header);
+        var srcIndex = DecodeRGBA2(pixels, 0, header);
         if (header[0] != kHeader[0] || header[1] != kHeader[1] || header[2] != kHeader[2])
         {
             throw new Exception("Not an encoded image (header doesn't match)");
@@ -223,18 +224,28 @@ public class Steganography
         return srcIndex;
     }
 
+    // Test if we need to copy the src pixels... or if we can modify them in po
+
     private static int EncodeA1(byte[] src, Color32[] dst, int dstIndex)
     {
         foreach (var b in src)
         {
-            dst[dstIndex++].a = (byte)((dst[dstIndex].r & 0xfe) | (b & 0x01));
-            dst[dstIndex++].a = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x02) >> 0x01));
-            dst[dstIndex++].a = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x04) >> 0x02));
-            dst[dstIndex++].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x08) >> 0x03));
-            dst[dstIndex++].a = (byte)((dst[dstIndex].r & 0xfe) | ((b & 0x10) >> 0x04));
-            dst[dstIndex++].a = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x20) >> 0x05));
-            dst[dstIndex++].a = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x40) >> 0x06));
-            dst[dstIndex++].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x80) >> 0x07));
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfe) | (b & 0x01));
+            dstIndex++;
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x02) >> 0x01));
+            dstIndex++;
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x04) >> 0x02));
+            dstIndex++;
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x08) >> 0x03));
+            dstIndex++;
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x10) >> 0x04));
+            dstIndex++;
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x20) >> 0x05));
+            dstIndex++;
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x40) >> 0x06));
+            dstIndex++;
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x80) >> 0x07));
+            dstIndex++;
         }
         return dstIndex;
     }
