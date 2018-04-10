@@ -130,12 +130,16 @@ public class Steganography
         switch (format)
         {
             case Format.A1:
+                DecodeA1(pixels, srcIndex, dst);
                 break;
             case Format.A2:
+                DecodeA2(pixels, srcIndex, dst);
                 break;
             case Format.RGB1:
+                DecodeRGB1(pixels, srcIndex, dst);
                 break;
             case Format.RGB2:
+                DecodeRGB2(pixels, srcIndex, dst);
                 break;
             case Format.RGBA1:
                 DecodeRGBA1(pixels, srcIndex, dst);
@@ -153,16 +157,36 @@ public class Steganography
         return new string(System.Text.Encoding.UTF8.GetChars(Decode(src)));
     }
 
-    private static byte[] DecodeA1(Color32[] src, int srcOffset, int sizeToDecode)
+    private static byte[] DecodeA2(Color32[] src, int srcIndex, byte[] dst)
     {
-        var result = new byte[sizeToDecode];
         return null;
     }
 
-    private static byte[] DecodeA2(Color32[] src, int srcOffset, int sizeToDecode)
+    private static byte[] DecodeRGB1(Color32[] src, int srcIndex, byte[] dst)
     {
-        var result = new byte[sizeToDecode];
         return null;
+    }
+
+    private static byte[] DecodeRGB2(Color32[] src, int srcIndex, byte[] dst)
+    {
+        return null;
+    }
+
+    private static int DecodeA1(Color32[] src, int srcIndex, byte[] dst)
+    {
+        for (var dstIndex = 0; dstIndex < dst.Length; dstIndex++)
+        {
+            dst[dstIndex] |= (byte)(src[srcIndex++].a & 0x01);
+            dst[dstIndex] |= (byte)((src[srcIndex++].a & 0x01) << 1);
+            dst[dstIndex] |= (byte)((src[srcIndex++].a & 0x01) << 2);
+            dst[dstIndex] |= (byte)((src[srcIndex++].a & 0x01) << 3);
+            dst[dstIndex] |= (byte)((src[srcIndex++].a & 0x01) << 4);
+            dst[dstIndex] |= (byte)((src[srcIndex++].a & 0x01) << 5);
+            dst[dstIndex] |= (byte)((src[srcIndex++].a & 0x01) << 6);
+            dst[dstIndex] |= (byte)((src[srcIndex++].a & 0x01) << 7);
+        }
+
+        return srcIndex;
     }
 
     private static int DecodeRGBA1(Color32[] src, int srcIndex, byte[] dst)
@@ -199,9 +223,20 @@ public class Steganography
         return srcIndex;
     }
 
-    private static void EncodeA1(byte[] src, Color32[] dst, int dstByteOffset)
+    private static int EncodeA1(byte[] src, Color32[] dst, int dstIndex)
     {
-        throw new NotImplementedException();
+        foreach (var b in src)
+        {
+            dst[dstIndex++].a = (byte)((dst[dstIndex].r & 0xfe) | (b & 0x01));
+            dst[dstIndex++].a = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x02) >> 0x01));
+            dst[dstIndex++].a = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x04) >> 0x02));
+            dst[dstIndex++].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x08) >> 0x03));
+            dst[dstIndex++].a = (byte)((dst[dstIndex].r & 0xfe) | ((b & 0x10) >> 0x04));
+            dst[dstIndex++].a = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x20) >> 0x05));
+            dst[dstIndex++].a = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x40) >> 0x06));
+            dst[dstIndex++].a = (byte)((dst[dstIndex].a & 0xfe) | ((b & 0x80) >> 0x07));
+        }
+        return dstIndex;
     }
 
     private static void EncodeA2(byte[] src, Color32[] dst, int dstByteOffset)

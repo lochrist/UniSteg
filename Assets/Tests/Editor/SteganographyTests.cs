@@ -10,11 +10,13 @@ using UnityEngine.UI;
 public class SteganographyTests {
     private static Color32 kBlack = new Color32(0, 0, 0, 0);
     private static Color32 kWhite = new Color32(255, 255, 255, 255);
+    private static int k1BitMask = 0xfe;
+    private static int k2BitMask = 0xfc;
 
 
-    void StenoString(Steganography.Format format, Color32 defaulColor, int mask)
+    void StenoString(Steganography.Format format, Color32 defaulColor, int mask, int defaultSize = 9)
     {
-        var tex = new Texture2D(9, 9);
+        var tex = new Texture2D(defaultSize, defaultSize);
         var initialData = Enumerable.Repeat(defaulColor, tex.width * tex.height).ToArray();
         tex.SetPixels32(initialData);
 
@@ -27,9 +29,9 @@ public class SteganographyTests {
         Assert.AreEqual(msg, result);
     }
 
-    void StenoData(Steganography.Format format, Color32 defaulColor, int mask)
+    void StenoData(Steganography.Format format, Color32 defaulColor, int mask, int defaultSize = 24)
     {
-        var tex = new Texture2D(24, 24);
+        var tex = new Texture2D(defaultSize, defaultSize);
         var initialData = Enumerable.Repeat(defaulColor, tex.width * tex.height).ToArray();
         tex.SetPixels32(initialData);
 
@@ -65,41 +67,83 @@ public class SteganographyTests {
         }
     }
 
+    #region RGBA1
     [Test]
     public void RGBA1_BlackImgStenoString()
     {
-        StenoString(Steganography.Format.RGBA1, kBlack, 0xfe);
+        StenoString(Steganography.Format.RGBA1, kBlack, k1BitMask);
     }
 
     [Test]
     public void RGBA1_WhiteImgStenoString()
     {
-        StenoString(Steganography.Format.RGBA1, kWhite, 0xfe);
+        StenoString(Steganography.Format.RGBA1, kWhite, k1BitMask);
     }
 
     [Test]
     public void RGBA1_BlackImgStenoData()
     {
-        StenoData(Steganography.Format.RGBA1, kBlack, 0xfe);
+        StenoData(Steganography.Format.RGBA1, kBlack, k1BitMask);
     }
 
     [Test]
     public void RGBA1_WhiteImgStenoData()
     {
-        StenoData(Steganography.Format.RGBA1, kWhite, 0xfe);
+        StenoData(Steganography.Format.RGBA1, kWhite, k1BitMask);
     }
+    #endregion
 
+    #region RGBA2
     [Test]
     public void RGBA2_BlackImgStenoString()
     {
-        StenoString(Steganography.Format.RGBA2, kBlack, 0xfc);
+        StenoString(Steganography.Format.RGBA2, kBlack, k2BitMask);
     }
 
     [Test]
     public void RGBA2_WhiteImgStenoString()
     {
-        StenoString(Steganography.Format.RGBA2, kWhite, 0xfc);
+        StenoString(Steganography.Format.RGBA2, kWhite, k2BitMask);
     }
+
+    [Test]
+    public void RGBA2_BlackImgStenoData()
+    {
+        StenoData(Steganography.Format.RGBA2, kBlack, k2BitMask);
+    }
+
+    [Test]
+    public void RGBA2_WhiteImgStenoData()
+    {
+        StenoData(Steganography.Format.RGBA2, kWhite, k2BitMask);
+    }
+    #endregion
+
+    #region A1
+    [Test]
+    public void A1_BlackImgStenoString()
+    {
+        StenoString(Steganography.Format.A1, kBlack, k1BitMask, 25);
+    }
+
+    [Test]
+    public void A1_WhiteImgStenoString()
+    {
+        StenoString(Steganography.Format.A1, kWhite, k1BitMask, 25);
+    }
+
+    [Test]
+    public void A1_BlackImgStenoData()
+    {
+        StenoData(Steganography.Format.A1, kBlack, k1BitMask, 300);
+    }
+
+    [Test]
+    public void A1_WhiteImgStenoData()
+    {
+        StenoData(Steganography.Format.A1, kWhite, k1BitMask, 300);
+    }
+    #endregion
 
     [Test]
     public void BufferTooSmall()
@@ -128,23 +172,23 @@ public class SteganographyTests {
     public void BitwiseTests()
     {
         byte n1 = 0x00;
-        n1 = (byte)((n1 & 0xfe) | 0x01);
+        n1 = (byte)((n1 & k1BitMask) | 0x01);
         Assert.AreEqual(1, n1);
 
         var n2 = 0x01;
-        n2 = (byte)((n2 & 0xfe) | 0x01);
+        n2 = (byte)((n2 & k1BitMask) | 0x01);
         Assert.AreEqual(1, n2);
 
         var n3 = 0x00;
-        n3 = (byte)((n3 & 0xfc) | 0x03);
+        n3 = (byte)((n3 & k2BitMask) | 0x03);
         Assert.AreEqual(3, n3);
 
         var n4 = 0x03;
-        n4 = (byte)((n4 & 0xfc) | 0x03);
+        n4 = (byte)((n4 & k2BitMask) | 0x03);
         Assert.AreEqual(3, n4);
 
         var n5 = 0x02;
-        n5 = (byte)((n5 & 0xfc) | 0x03);
+        n5 = (byte)((n5 & k2BitMask) | 0x03);
         Assert.AreEqual(3, n5);
     }
 }
