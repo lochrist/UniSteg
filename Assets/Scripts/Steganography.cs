@@ -171,14 +171,88 @@ public class Steganography
         return srcIndex;
     }
 
-    private static byte[] DecodeRGB1(Color32[] src, int srcIndex, byte[] dst)
+    private static int DecodeRGB1(Color32[] src, int srcIndex, byte[] dst)
     {
-        return null;
+        for (var dstIndex = 0; dstIndex < dst.Length; dstIndex++)
+        {
+            switch (dstIndex % 3)
+            {
+                case 0:
+                    dst[dstIndex] |= (byte)(src[srcIndex].r & 0x01);
+                    dst[dstIndex] |= (byte)((src[srcIndex].g & 0x01) << 1);
+                    dst[dstIndex] |= (byte)((src[srcIndex].b & 0x01) << 2);
+                    srcIndex++;
+                    dst[dstIndex] |= (byte)((src[srcIndex].r & 0x01) << 3);
+                    dst[dstIndex] |= (byte)((src[srcIndex].g & 0x01) << 4);
+                    dst[dstIndex] |= (byte)((src[srcIndex].b & 0x01) << 5);
+                    srcIndex++;
+                    dst[dstIndex] |= (byte)((src[srcIndex].r & 0x01) << 6);
+                    dst[dstIndex] |= (byte)((src[srcIndex].g & 0x01) << 7);
+                    break;
+                case 1:
+                    dst[dstIndex] |= (byte)(src[srcIndex].b & 0x01);
+                    srcIndex++;
+                    dst[dstIndex] |= (byte)((src[srcIndex].r & 0x01) << 1);
+                    dst[dstIndex] |= (byte)((src[srcIndex].g & 0x01) << 2);
+                    dst[dstIndex] |= (byte)((src[srcIndex].b & 0x01) << 3);
+                    srcIndex++;
+                    dst[dstIndex] |= (byte)((src[srcIndex].r & 0x01) << 4);
+                    dst[dstIndex] |= (byte)((src[srcIndex].g & 0x01) << 5);
+                    dst[dstIndex] |= (byte)((src[srcIndex].b & 0x01) << 6);
+                    srcIndex++;
+                    dst[dstIndex] |= (byte)((src[srcIndex].r & 0x01) << 7);
+                    break;
+                case 2:
+                    dst[dstIndex] |= (byte)(src[srcIndex].g & 0x01);
+                    dst[dstIndex] |= (byte)((src[srcIndex].b & 0x01) << 1);
+                    srcIndex++;
+                    dst[dstIndex] |= (byte)((src[srcIndex].r & 0x01) << 2);
+                    dst[dstIndex] |= (byte)((src[srcIndex].g & 0x01) << 3);
+                    dst[dstIndex] |= (byte)((src[srcIndex].b & 0x01) << 4);
+                    srcIndex++;
+                    dst[dstIndex] |= (byte)((src[srcIndex].r & 0x01) << 5);
+                    dst[dstIndex] |= (byte)((src[srcIndex].g & 0x01) << 6);
+                    dst[dstIndex] |= (byte)((src[srcIndex].b & 0x01) << 7);
+                    srcIndex++;
+                    break;
+            }
+        }
+
+        return srcIndex;
     }
 
-    private static byte[] DecodeRGB2(Color32[] src, int srcIndex, byte[] dst)
+    private static int DecodeRGB2(Color32[] src, int srcIndex, byte[] dst)
     {
-        return null;
+        for (var dstIndex = 0; dstIndex < dst.Length; dstIndex++)
+        {
+            switch (dstIndex % 3)
+            {
+                case 0:
+                    dst[dstIndex] |= (byte) (src[srcIndex].r & 0x03);
+                    dst[dstIndex] |= (byte) ((src[srcIndex].g & 0x03) << 2);
+                    dst[dstIndex] |= (byte) ((src[srcIndex].b & 0x03) << 4);
+                    srcIndex++;
+                    dst[dstIndex] |= (byte) ((src[srcIndex].r & 0x03) << 6);
+                    break;
+                case 1:
+                    dst[dstIndex] |= (byte) (src[srcIndex].g & 0x03);
+                    dst[dstIndex] |= (byte) ((src[srcIndex].b & 0x03) << 2);
+                    srcIndex++;
+                    dst[dstIndex] |= (byte) ((src[srcIndex].r & 0x03) << 4);
+                    dst[dstIndex] |= (byte) ((src[srcIndex].g & 0x03) << 6);
+                    break;
+                case 2:
+                    dst[dstIndex] |= (byte) (src[srcIndex].b & 0x03);
+                    srcIndex++;
+                    dst[dstIndex] |= (byte) ((src[srcIndex].r & 0x03) << 2);
+                    dst[dstIndex] |= (byte) ((src[srcIndex].g & 0x03) << 4);
+                    dst[dstIndex] |= (byte) ((src[srcIndex].b & 0x03) << 6);
+                    srcIndex++;
+                    break;
+            }
+        }
+
+        return srcIndex;
     }
 
     private static int DecodeA1(Color32[] src, int srcIndex, byte[] dst)
@@ -273,14 +347,88 @@ public class Steganography
         }
     }
 
-    private static void EncodeRGB1(byte[] src, Color32[] dst, int dstByteOffset)
+    private static int EncodeRGB1(byte[] src, Color32[] dst, int dstIndex)
     {
-        throw new NotImplementedException();
+        for (var i = 0; i < src.Length; ++i)
+        {
+            var b = src[i];
+
+            switch (i % 3)
+            {
+                case 0:
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfe) | (b & 0x01));
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x02) >> 0x01));
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x04) >> 0x02));
+                    dstIndex++;
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfe) | ((b & 0x08) >> 0x03));
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x10) >> 0x04));
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x20) >> 0x05));
+                    dstIndex++;
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfe) | ((b & 0x40) >> 0x06));
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x80) >> 0x07));
+                    break;
+                case 1:
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfe) | (b & 0x01));
+                    dstIndex++;
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfe) | ((b & 0x02) >> 0x01));
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x04) >> 0x02));
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x08) >> 0x03));
+                    dstIndex++;
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfe) | ((b & 0x10) >> 0x04));
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x20) >> 0x05));
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x40) >> 0x06));
+                    dstIndex++;
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfe) | ((b & 0x80) >> 0x07));
+                    break;
+                case 2:
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfe) | (b & 0x01));
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x02) >> 0x01));
+                    dstIndex++;
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfe) | ((b & 0x04) >> 0x02));
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x08) >> 0x03));
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x10) >> 0x04));
+                    dstIndex++;
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfe) | ((b & 0x20) >> 0x05));
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfe) | ((b & 0x40) >> 0x06));
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfe) | ((b & 0x80) >> 0x07));
+                    dstIndex++;
+                    break;
+            }
+        }
+        return dstIndex;
     }
 
-    private static void EncodeRGB2(byte[] src, Color32[] dst, int dstByteOffset)
+    private static void EncodeRGB2(byte[] src, Color32[] dst, int dstIndex)
     {
-        throw new NotImplementedException();
+        for (var i = 0; i < src.Length; ++i)
+        {
+            var b = src[i];
+            switch (i % 3)
+            {
+                case 0:
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfc) | (b & 0x03));
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfc) | ((b & 0x0C) >> 0x02));
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfc) | ((b & 0x30) >> 0x04));
+                    ++dstIndex;
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfc) | ((b & 0xc0) >> 0x06));
+                    break;
+                case 1:
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfc) | (b & 0x03));
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfc) | ((b & 0x0C) >> 0x02));
+                    ++dstIndex;
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfc) | ((b & 0x30) >> 0x04));
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfc) | ((b & 0xc0) >> 0x06));
+                    break;
+                case 2:
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfc) | (b & 0x03));
+                    ++dstIndex;
+                    dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfc) | ((b & 0x0C) >> 0x02));
+                    dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfc) | ((b & 0x30) >> 0x04));
+                    dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfc) | ((b & 0xc0) >> 0x06));
+                    ++dstIndex;
+                    break;
+            }
+        }
     }
 
     private static int EncodeRGBA1(byte[] src, Color32[] dst, int dstIndex)
@@ -307,8 +455,8 @@ public class Steganography
         {
             dst[dstIndex].r = (byte)((dst[dstIndex].r & 0xfc) | (b & 0x03));
             dst[dstIndex].g = (byte)((dst[dstIndex].g & 0xfc) | ((b & 0x0C) >> 0x02));
-            dst[dstIndex].b = (byte)((dst[dstIndex].g & 0xfc) | ((b & 0x30) >> 0x04));
-            dst[dstIndex].a = (byte)((dst[dstIndex].g & 0xfc) | ((b & 0xc0) >> 0x06));
+            dst[dstIndex].b = (byte)((dst[dstIndex].b & 0xfc) | ((b & 0x30) >> 0x04));
+            dst[dstIndex].a = (byte)((dst[dstIndex].a & 0xfc) | ((b & 0xc0) >> 0x06));
             ++dstIndex;
         }
     }

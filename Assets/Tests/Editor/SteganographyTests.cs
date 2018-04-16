@@ -100,8 +100,6 @@ public class SteganographyTests {
                     Assert.AreEqual(srcPixel.a & k2BitMask, encodedPixel.a & k2BitMask);
                     break;
             }
-
-            
         }
     }
 
@@ -206,6 +204,58 @@ public class SteganographyTests {
     public void A2_WhiteImgStenoData()
     {
         StenoData(Steganography.Format.A2, kWhite, k2BitMask, 300);
+    }
+    #endregion
+
+    #region RGB1
+    [Test]
+    public void RGB1_BlackImgStenoString()
+    {
+        StenoString(Steganography.Format.RGB1, kBlack, k1BitMask, 25);
+    }
+
+    [Test]
+    public void RGB1_WhiteImgStenoString()
+    {
+        StenoString(Steganography.Format.RGB1, kWhite, k1BitMask, 25);
+    }
+
+    [Test]
+    public void RGB1_BlackImgStenoData()
+    {
+        StenoData(Steganography.Format.RGB1, kBlack, k1BitMask, 46);
+    }
+
+    [Test]
+    public void RGB1_WhiteImgStenoData()
+    {
+        StenoData(Steganography.Format.RGB1, kWhite, k1BitMask, 46);
+    }
+    #endregion
+
+    #region RGB2
+    [Test]
+    public void RGB2_BlackImgStenoString()
+    {
+        StenoString(Steganography.Format.RGB2, kBlack, k2BitMask, 25);
+    }
+
+    [Test]
+    public void RGB2_WhiteImgStenoString()
+    {
+        StenoString(Steganography.Format.RGB2, kWhite, k2BitMask, 25);
+    }
+
+    [Test]
+    public void RGB2_BlackImgStenoData()
+    {
+        StenoData(Steganography.Format.RGB2, kBlack, k2BitMask, 46);
+    }
+
+    [Test]
+    public void RGB2_WhiteImgStenoData()
+    {
+        StenoData(Steganography.Format.RGB2, kWhite, k2BitMask, 46);
     }
     #endregion
 
