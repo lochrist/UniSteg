@@ -1,44 +1,33 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
+using NUnit.Framework;
 using UnityEngine;
 
-public class SteganoCtrl : MonoBehaviour {
+public class SteganoCtrl : MonoBehaviour
+{
+    public string secretMsg = "This is some secret stuff!";
 
-    public string secretMsg;
-    public Sprite OriginalSprite;
-    public string decodedMsg;
-
-    public Texture2D tex;
+    private Texture2D encodedTex;
     private Sprite mySprite;
+    private bool isDecoded;
     private SpriteRenderer sr;
 
-    private bool isDecoded;
-
-    // Use this for initialization
     void Start () {
-        // GetPixel32, SetPixels32
+        sr = gameObject.GetComponent<SpriteRenderer>();
+        encodedTex = Steganography.Encode(sr.sprite.texture, secretMsg);
+        sr.sprite = Sprite.Create(encodedTex, new Rect(0.0f, 0.0f, encodedTex.width, encodedTex.height), new Vector2(0.5f, 0.5f));
 
-        // Create new sprite according to original texture:
-        sr = gameObject.AddComponent<SpriteRenderer>() as SpriteRenderer;
-        sr.color = new Color(0.9f, 0.9f, 0.9f, 1.0f);
+        var refPixels = encodedTex.GetPixels32();
+        var pixels = encodedTex.GetPixels32();
+        for (var i = 8; i < pixels.Length; i++)
+        {
+            Assert.AreEqual(refPixels[i], pixels[i]);
+        }
 
-        transform.position = new Vector3(1.5f, 1.5f, 0.0f);
-        transform.localScale = new Vector3(5f, 5f, 1f);
-
-        // var encodedTex = Steganongraphy.Encode(OriginalSprite.texture, secretMsg);
-        var encodedTex = OriginalSprite.texture;
-        mySprite = Sprite.Create(encodedTex, OriginalSprite.textureRect, new Vector2(0.5f, 0.5f), 100.0f);
-        sr.sprite = mySprite;
-
-        var c = new Color(0.5f, 0.5f, 0.5f, 0.5f);
-        Color32 c32 = c;
-        Color cc = c32;
-        Color32 c33 = cc;
-        Color ccc = c33;
-
-
-        c32.a = (byte)(c32.a | 1);
+        var bytes = encodedTex.EncodeToPNG();
+        File.WriteAllBytes(Application.dataPath + "/Encoded.png", bytes);
     }
 
     private void OnGUI()
@@ -48,7 +37,7 @@ public class SteganoCtrl : MonoBehaviour {
         isDecoded = GUILayout.Toggle(isDecoded, "Decode");
         if (isDecoded)
         {
-            decodedMsg = Steganography.DecodeAsString(mySprite.texture);
+            var decodedMsg = Steganography.DecodeAsString(sr.sprite.texture);
             GUILayout.Label(decodedMsg);
         }
         else
@@ -56,10 +45,8 @@ public class SteganoCtrl : MonoBehaviour {
             GUILayout.Label("**********************");
         }
 
+        GUILayout.Button(encodedTex);
         GUILayout.EndHorizontal();
-
-
-
     }
 
     // Update is called once per frame

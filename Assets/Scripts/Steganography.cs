@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class Steganography
 {
-
     public enum Format
     {
         RGB1,
@@ -35,14 +34,12 @@ public class Steganography
         }
 
         var pixels = src.GetPixels32();
-        var copy = new Texture2D(src.width, src.height);
-
+        var copy = new Texture2D(src.width, src.height, src.format, false);
         var header = new byte[kHeaderSize];
         kHeader.CopyTo(header, 0);
         header[3] = (byte)format;
         var srcSize = System.BitConverter.GetBytes(bytes.Length);
         srcSize.CopyTo(header, 4);
-
         EncodeRGBA2(header, pixels, 0);
         switch (format)
         {
@@ -65,10 +62,8 @@ public class Steganography
                 EncodeRGBA2(bytes, pixels, kHeaderNbPixels);
                 break;
         }
-
-        var pixels2 = src.GetPixels32();
-
         copy.SetPixels32(pixels);
+        copy.Apply();
 
         return copy;
     }

@@ -13,13 +13,55 @@ public class SteganographyTests {
     private static int k1BitMask = 0xfe;
     private static int k2BitMask = 0xfc;
 
-
-    void StenoString(Steganography.Format format, Color32 defaulColor, int mask, int defaultSize = 9)
+    enum DataPattern
     {
-        var tex = new Texture2D(defaultSize, defaultSize);
+        kAllBlack,
+        kAllWhite,
+        kSequence
+    }
+
+    Texture2D CreateTex(int size, Color32 defaulColor)
+    {
+        var tex = new Texture2D(size, size);
         var initialData = Enumerable.Repeat(defaulColor, tex.width * tex.height).ToArray();
         tex.SetPixels32(initialData);
+        return tex;
+    }
 
+    Texture2D BlackImg(int size)
+    {
+        return CreateTex(size, kBlack);
+    }
+
+    Texture2D WhiteImg(int size)
+    {
+        return CreateTex(size, kWhite);
+    }
+
+    Texture2D RandomImg(int size)
+    {
+        var tex = new Texture2D(size, size);
+        var initialData = Enumerable.Repeat(kBlack, tex.width * tex.height).ToArray();
+        for (var i = 0; i < initialData.Length; ++i)
+        {
+            initialData[i].r = (byte)UnityEngine.Random.Range(0, 255);
+            initialData[i].g = (byte)UnityEngine.Random.Range(0, 255);
+            initialData[i].b = (byte)UnityEngine.Random.Range(0, 255);
+            initialData[i].a = (byte)UnityEngine.Random.Range(0, 255);
+        }
+        tex.SetPixels32(initialData);
+        return tex;
+    }
+
+    void StenoString(Steganography.Format format, int mask, int defaultSize = 9)
+    {
+        StenoString(format, BlackImg(defaultSize), mask, defaultSize);
+        StenoString(format, WhiteImg(defaultSize), mask, defaultSize);
+        StenoString(format, RandomImg(defaultSize), mask, defaultSize);
+    }
+
+    void StenoString(Steganography.Format format, Texture2D tex, int mask, int defaultSize)
+    {
         var msg = "this is a test";
         var encodedTex = Steganography.Encode(tex, msg, format);
         ValidateEncoding(tex, encodedTex, format);
@@ -29,16 +71,38 @@ public class SteganographyTests {
         Assert.AreEqual(msg, result);
     }
 
-    void StenoData(Steganography.Format format, Color32 defaulColor, int mask, int defaultSize = 24)
+    void StenoData(Steganography.Format format, int mask, int defaultSize = 24)
     {
-        var tex = new Texture2D(defaultSize, defaultSize);
-        var initialData = Enumerable.Repeat(defaulColor, tex.width * tex.height).ToArray();
-        tex.SetPixels32(initialData);
+        StenoData(format, BlackImg(defaultSize), mask, DataPattern.kAllBlack, defaultSize);
+        StenoData(format, BlackImg(defaultSize), mask, DataPattern.kAllWhite, defaultSize);
+        StenoData(format, BlackImg(defaultSize), mask, DataPattern.kSequence, defaultSize);
 
+        StenoData(format, WhiteImg(defaultSize), mask, DataPattern.kAllBlack, defaultSize);
+        StenoData(format, WhiteImg(defaultSize), mask, DataPattern.kAllWhite, defaultSize);
+        StenoData(format, WhiteImg(defaultSize), mask, DataPattern.kSequence, defaultSize);
+
+        StenoData(format, RandomImg(defaultSize), mask, DataPattern.kAllBlack, defaultSize);
+        StenoData(format, RandomImg(defaultSize), mask, DataPattern.kAllWhite, defaultSize);
+        StenoData(format, RandomImg(defaultSize), mask, DataPattern.kSequence, defaultSize);
+    }
+
+    void StenoData(Steganography.Format format, Texture2D tex, int mask, DataPattern dataPattern, int defaultSize)
+    {
         var data = new byte[255];
         for (byte i = 0; i < 255; i++)
         {
-            data[i] = i;
+            switch (dataPattern)
+            {
+                case DataPattern.kAllBlack:
+                    data[i] = 0;
+                    break;
+                case DataPattern.kAllWhite:
+                    data[i] = 1;
+                    break;
+                case DataPattern.kSequence:
+                    data[i] = i;
+                    break;
+            }
         }
         var encodedTex = Steganography.Encode(tex, data, format);
         ValidateEncoding(tex, encodedTex, format);
@@ -105,157 +169,86 @@ public class SteganographyTests {
 
     #region RGBA1
     [Test]
-    public void RGBA1_BlackImgStenoString()
+    public void RGBA1_ImgStenoString()
     {
-        StenoString(Steganography.Format.RGBA1, kBlack, k1BitMask);
+        StenoString(Steganography.Format.RGBA1, k1BitMask);
     }
 
     [Test]
-    public void RGBA1_WhiteImgStenoString()
+    public void RGBA1_ImgStenoData()
     {
-        StenoString(Steganography.Format.RGBA1, kWhite, k1BitMask);
-    }
-
-    [Test]
-    public void RGBA1_BlackImgStenoData()
-    {
-        StenoData(Steganography.Format.RGBA1, kBlack, k1BitMask);
-    }
-
-    [Test]
-    public void RGBA1_WhiteImgStenoData()
-    {
-        StenoData(Steganography.Format.RGBA1, kWhite, k1BitMask);
+        StenoData(Steganography.Format.RGBA1, k1BitMask);
     }
     #endregion
 
     #region RGBA2
     [Test]
-    public void RGBA2_BlackImgStenoString()
+    public void RGBA2_ImgStenoString()
     {
-        StenoString(Steganography.Format.RGBA2, kBlack, k2BitMask);
+        StenoString(Steganography.Format.RGBA2, k2BitMask);
     }
 
     [Test]
-    public void RGBA2_WhiteImgStenoString()
+    public void RGBA2_ImgStenoData()
     {
-        StenoString(Steganography.Format.RGBA2, kWhite, k2BitMask);
-    }
-
-    [Test]
-    public void RGBA2_BlackImgStenoData()
-    {
-        StenoData(Steganography.Format.RGBA2, kBlack, k2BitMask);
-    }
-
-    [Test]
-    public void RGBA2_WhiteImgStenoData()
-    {
-        StenoData(Steganography.Format.RGBA2, kWhite, k2BitMask);
+        StenoData(Steganography.Format.RGBA2, k2BitMask);
     }
     #endregion
 
     #region A1
     [Test]
-    public void A1_BlackImgStenoString()
+    public void A1_ImgStenoString()
     {
-        StenoString(Steganography.Format.A1, kBlack, k1BitMask, 25);
+        StenoString(Steganography.Format.A1, k1BitMask, 25);
     }
 
     [Test]
-    public void A1_WhiteImgStenoString()
+    public void A1_ImgImgStenoData()
     {
-        StenoString(Steganography.Format.A1, kWhite, k1BitMask, 25);
+        StenoData(Steganography.Format.A1, k1BitMask, 46);
     }
 
-    [Test]
-    public void A1_BlackImgStenoData()
-    {
-        StenoData(Steganography.Format.A1, kBlack, k1BitMask, 46);
-    }
-
-    [Test]
-    public void A1_WhiteImgStenoData()
-    {
-        StenoData(Steganography.Format.A1, kWhite, k1BitMask, 46);
-    }
     #endregion
 
     #region A2
     [Test]
-    public void A2_BlackImgStenoString()
+    public void A2_ImgStenoString()
     {
-        StenoString(Steganography.Format.A2, kBlack, k2BitMask, 25);
+        StenoString(Steganography.Format.A2, k2BitMask, 25);
     }
 
     [Test]
-    public void A2_WhiteImgStenoString()
+    public void A2_ImgStenoData()
     {
-        StenoString(Steganography.Format.A2, kWhite, k2BitMask, 25);
-    }
-
-    [Test]
-    public void A2_BlackImgStenoData()
-    {
-        StenoData(Steganography.Format.A2, kBlack, k2BitMask, 300);
-    }
-
-    [Test]
-    public void A2_WhiteImgStenoData()
-    {
-        StenoData(Steganography.Format.A2, kWhite, k2BitMask, 300);
+        StenoData(Steganography.Format.A2, k2BitMask, 300);
     }
     #endregion
 
     #region RGB1
     [Test]
-    public void RGB1_BlackImgStenoString()
+    public void RGB1_ImgStenoString()
     {
-        StenoString(Steganography.Format.RGB1, kBlack, k1BitMask, 25);
+        StenoString(Steganography.Format.RGB1, k1BitMask, 25);
     }
 
     [Test]
-    public void RGB1_WhiteImgStenoString()
+    public void RGB1_ImgStenoData()
     {
-        StenoString(Steganography.Format.RGB1, kWhite, k1BitMask, 25);
-    }
-
-    [Test]
-    public void RGB1_BlackImgStenoData()
-    {
-        StenoData(Steganography.Format.RGB1, kBlack, k1BitMask, 46);
-    }
-
-    [Test]
-    public void RGB1_WhiteImgStenoData()
-    {
-        StenoData(Steganography.Format.RGB1, kWhite, k1BitMask, 46);
+        StenoData(Steganography.Format.RGB1, k1BitMask, 46);
     }
     #endregion
 
     #region RGB2
     [Test]
-    public void RGB2_BlackImgStenoString()
+    public void RGB2_ImgStenoString()
     {
-        StenoString(Steganography.Format.RGB2, kBlack, k2BitMask, 25);
+        StenoString(Steganography.Format.RGB2, k2BitMask, 25);
     }
 
     [Test]
-    public void RGB2_WhiteImgStenoString()
+    public void RGB2_ImgStenoData()
     {
-        StenoString(Steganography.Format.RGB2, kWhite, k2BitMask, 25);
-    }
-
-    [Test]
-    public void RGB2_BlackImgStenoData()
-    {
-        StenoData(Steganography.Format.RGB2, kBlack, k2BitMask, 46);
-    }
-
-    [Test]
-    public void RGB2_WhiteImgStenoData()
-    {
-        StenoData(Steganography.Format.RGB2, kWhite, k2BitMask, 46);
+        StenoData(Steganography.Format.RGB2, k2BitMask, 46);
     }
     #endregion
 
