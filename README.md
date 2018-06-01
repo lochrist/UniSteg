@@ -56,4 +56,4 @@ public enum Format
 }
 ```
 
-Each stream of data creates an 8 bytes header that contains the format the data is written with and the size of the written data.
+Each stream of data has a 8 bytes header that contains the format the data is written with and the size of the written data.
